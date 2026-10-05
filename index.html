@@ -199,26 +199,133 @@ h1, h2, p { margin: 0; }
 }
 .coin.spent { opacity: .18; transform: translateY(4px); box-shadow: 0 0 0 2px var(--muted); background: var(--muted); }
 
-/* ---------- Fichas sueltas para atrapar ---------- */
-#loose { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-.fly {
-  position: absolute; left: 0; top: 0;
-  width: 52px; height: 52px;
-  padding: 0;
-  border-radius: 50%;
+/* ---------- Pantallas previas: inicio y minijuegos ---------- */
+.screen {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.screen h2 {
+  font-family: var(--display);
+  font-size: clamp(11px, 3.4vw, 15px);
+  line-height: 1.7;
+  color: var(--gold);
+  text-wrap: balance;
+  min-height: 3.4em;
+  display: flex; align-items: center;
+}
+.screen .big {
+  font-family: var(--display);
+  font-size: clamp(16px, 5.4vw, 26px);
+  line-height: 1.5;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--cabinet);
+  text-wrap: balance;
+}
+.screen p { max-width: 30ch; font-size: 26px; }
+.rules {
+  margin: 0; padding: 12px 14px 12px 40px;
+  max-width: 34ch;
+  text-align: left;
+  font-size: 22px;
+  color: var(--text);
+  background: var(--night-2);
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 2px var(--gold-dark);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rules li::marker { color: var(--gold); font-family: var(--display); font-size: 12px; }
+.sprite { image-rendering: pixelated; }
+.hero { width: 128px; height: 128px; animation: hop .6s steps(2) infinite; }
+@keyframes hop { 50% { transform: translateY(-8px); } }
+.btn {
+  font-family: var(--display);
+  font-size: 14px;
+  color: var(--ink);
   background: var(--gold);
   border: var(--px) solid var(--ink);
-  box-shadow: 0 0 0 3px var(--gold-dark), inset -6px -6px 0 var(--gold-dark), inset 4px 4px 0 #fff3b0, 0 0 18px rgba(255,203,61,.6);
-  font-family: var(--display);
-  font-size: 16px;
-  color: var(--gold-dark);
+  box-shadow: inset -4px -4px 0 var(--gold-dark), inset 4px 4px 0 #fff3b0, 0 0 0 var(--px) var(--gold-dark);
+  padding: 16px 22px;
   cursor: pointer;
-  pointer-events: auto;
+}
+.btn:active { transform: translateY(3px); }
+.btn:focus-visible { outline: 3px dashed var(--text); outline-offset: 6px; }
+
+.goldbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--display);
+  font-size: clamp(8px, 2.4vw, 10px);
+  color: var(--muted);
+}
+.gnut { width: 32px; height: 32px; transition: opacity .2s steps(2); }
+.gnut.off { opacity: .2; filter: grayscale(1); }
+.gnut.got { animation: pop .45s steps(5); }
+
+#cv {
+  width: min(100%, 440px, 50vh);
+  aspect-ratio: 4 / 5;
+  image-rendering: pixelated;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 var(--px) var(--gold);
+  touch-action: none;
+  cursor: ew-resize;
+  background: var(--night-2);
+}
+
+.forest {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 8px 14px;
+  background: linear-gradient(#12201a, #12201a) bottom / 100% 100% no-repeat, var(--night-2);
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 var(--px) var(--gold);
+}
+.spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  background: none;
+  border: 0;
+  padding: 6px 2px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  will-change: transform;
 }
-.fly.caught { pointer-events: none; transition: transform .45s cubic-bezier(.5,-0.4,.8,.6), opacity .45s; opacity: 0; }
+.spot .found { height: 46px; display: flex; align-items: flex-end; justify-content: center; font-size: 34px; }
+.spot .found img { height: 44px; }
+.spot .found > * { animation: pop .4s steps(5) both; }
+.spot .hide { height: clamp(56px, 17vw, 84px); max-width: 100%; object-fit: contain; object-position: bottom; }
+.spot .what { min-height: 2em; color: var(--muted); text-wrap: balance; }
+.spot.shake .hide { animation: rustle .5s steps(6); }
+@keyframes rustle { 0%, 100% { transform: rotate(0); } 20%, 60% { transform: rotate(-7deg) translateX(-3px); } 40%, 80% { transform: rotate(7deg) translateX(3px); } }
+.spot:disabled { cursor: default; }
+.spot.done .hide { opacity: .45; }
+.spot:not(:disabled):hover .hide { transform: translateY(-3px); }
+.spot:focus-visible { outline: 3px dashed var(--gold); }
+
+/* En la máquina, las fichas son las nueces doradas */
+.coins .coin, .coins .coin.spent {
+  width: 24px; height: 24px;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: var(--nut-gold) center / contain no-repeat;
+  image-rendering: pixelated;
+}
+.coins .coin.spent { opacity: .2; filter: grayscale(1); }
+.cell .sym { height: 64%; image-rendering: pixelated; }
 
 /* ---------- Palanca ---------- */
 .lever {
@@ -402,13 +509,37 @@ h1, h2, p { margin: 0; }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops, .win .band.on { animation: none !important; }
+  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops, .win .band.on, .hero { animation: none !important; }
 }
 </style>
 </head>
 <body>
 
-<main class="game" id="game">
+<section class="screen" id="intro">
+  <img class="sprite hero" id="hero" alt="">
+  <p class="big">HABÍA UNA VEZ UNA ARDILLITA...</p>
+  <p>...que perdió sus 3 nueces doradas y tuvo que salir a recuperarlas.</p>
+  <ol class="rules">
+    <li>Atajá las nueces que caen del árbol.</li>
+    <li>Buscá las que quedaron escondidas en el bosque.</li>
+    <li>Con las 3 doradas, probá tu suerte en la máquina.</li>
+  </ol>
+  <button class="btn" id="start" type="button">SALIR A BUSCARLAS</button>
+</section>
+
+<section class="screen" id="g1" hidden>
+  <div class="goldbar" aria-hidden="true"><span>NUECES DORADAS</span><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""></div>
+  <h2 id="g1msg" aria-live="polite"></h2>
+  <canvas id="cv" aria-label="Mové la ardilla para atajar las nueces que caen"></canvas>
+</section>
+
+<section class="screen" id="g2" hidden>
+  <div class="goldbar" aria-hidden="true"><span>NUECES DORADAS</span><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""></div>
+  <h2 id="g2msg" aria-live="polite"></h2>
+  <div class="forest" id="forest"></div>
+</section>
+
+<main class="game" id="game" hidden>
   <div class="machine" id="machine">
     <div class="marquee">
       <div class="bulbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -423,14 +554,14 @@ h1, h2, p { margin: 0; }
     </div>
     <div class="panel">
       <p class="status" id="status" aria-live="polite"></p>
-      <div class="coins" id="coins" aria-hidden="true"><span>FICHAS</span></div>
+      <div class="coins" id="coins" aria-hidden="true"><span>NUECES</span></div>
     </div>
   </div>
   <button class="lever" id="lever" type="button" aria-label="Tirar de la palanca">
     <span class="base"></span><span class="rod"></span><span class="knob"></span>
   </button>
 </main>
-<p class="hint" id="hint"></p>
+<p class="hint" id="hint" hidden></p>
 
 <section class="stage" id="stage" aria-live="polite">
   <div class="headline">
@@ -450,18 +581,17 @@ h1, h2, p { margin: 0; }
   <p class="help" id="help" hidden>Tocá el video para cobrar tu premio ▲ <a id="ytlink" href="#" target="_blank" rel="noopener">(o abrilo en YouTube)</a></p>
 </section>
 
-<div id="loose"></div>
 <div id="flash" aria-hidden="true"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <script>
 // ====== Lo único que hay que tocar para personalizar el regalo ======
 const CONFIG = {
-  fichas: 3,                      // fichas que hay que atrapar = tiros; gana recién en el último
-  fichasSueltas: 5,               // cuántas andan volando por la pantalla
+  fichas: 3,                      // nueces doradas a conseguir = tiros; gana recién en el último
+  nuecesComunes: 5,               // cuántas hay que atajar antes de que caiga la dorada
   perdiste: [                     // mensaje después de cada tiro fallido
     'CASI... SEGUÍ INTENTANDO, ¡PODÉS LLEGAR A GANAR!',
-    '¡UFF, DOS NUECES Y LA TERCERA SE PASÓ! ÚLTIMA FICHA...',
+    '¡UFF, DOS NUECES Y LA TERCERA SE PASÓ! ÚLTIMA NUEZ DORADA...',
   ],
 
   videoId: 'eBG7P-K-r1Y',         // ID de YouTube (Everlong). Es lo que va después de "v=" en la URL
@@ -481,7 +611,6 @@ const CONFIG = {
   notaEn: 14,
   nota: 'VAMOS JUNTOS, ¿QUERÉS? ♥',
 
-  premio: '🌰',
   simbolos: ['🎸', '🥁', '🤘', '⚡', '🎤', '🍒', '⭐'],
 };
 // ====================================================================
@@ -492,7 +621,130 @@ const reels = [...document.querySelectorAll('.reel')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rand = arr => arr[Math.floor(Math.random() * arr.length)];
 const wait = ms => new Promise(r => setTimeout(r, ms));
-const T = CONFIG.premio;
+// ---------- Pixel art: cada dibujo es una grilla de letras ----------
+const INK = '#17121f';
+function sprite(rows, pal) {
+  const w = Math.max(...rows.map(r => r.length)), c = document.createElement('canvas');
+  c.width = w; c.height = rows.length;
+  const g = c.getContext('2d');
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === '.') return;
+    g.fillStyle = ch === 'k' ? INK : pal[ch];
+    g.fillRect(x, y, 1, 1);
+  }));
+  c.url = c.toDataURL();
+  return c;
+}
+const NUT = [
+  '....kkkkkk....',
+  '..kkBBBbbbkk..',
+  '.kBWWBbdbbbdk.',
+  '.kBWBbbdbbbbk.',
+  'kBBbbdbdbdbbdk',
+  'kBbbbbbdbbbbdk',
+  'kBbdbbbdbbdbdk',
+  'kBbbbbbdbbbbdk',
+  'kbbbdbbdbdbbdk',
+  'kbbbbbbdbbbddk',
+  '.kbbdbbdbbbdk.',
+  '.kbbbbbdbbddk.',
+  '..kkbbbdbdkk..',
+  '....kkkkkk....',
+];
+const SPR = {
+  nut: sprite(NUT, { W: '#f0c896', B: '#d9a066', b: '#b5722d', d: '#7a4a1c' }),
+  gold: sprite(NUT, { W: '#ffffff', B: '#fff3b0', b: '#ffcb3d', d: '#c8901f' }),
+  squirrel: sprite([
+    '..kkkk..........',
+    '.kTTTTk....k.k..',
+    'kTTttTTk..kokok.',
+    'kTttttTk.koooook',
+    'kTttttTk.kookook',
+    'kTtttTk..koooook',
+    '.kTttTk.koooowk.',
+    '.kTttTkkooowwk..',
+    '..kTttkooowwwk..',
+    '..kTtkoooowwwk..',
+    '..kttkooookwwk..',
+    '...kkoooowwwk...',
+    '....kooooowwk...',
+    '....kookkkook...',
+    '...kkook..kookk.',
+    '...kkkk...kkkk..',
+  ], { T: '#e89a55', t: '#c96a2b', o: '#b5722d', w: '#f6ecd2' }),
+  arbusto: sprite([
+    '....kkkk......',
+    '..kkGGggkkk...',
+    '.kGGggggggGk..',
+    'kGgggGGggggggk',
+    'kggggggggGGggk',
+    'kgggGggggggggk',
+    'kggggggGgggggk',
+    '.kggggggggggk.',
+    '..kkkkkkkkkk..',
+  ], { g: '#2f8f46', G: '#5cc46a' }),
+  piedra: sprite([
+    '.....kkkkk....',
+    '...kkSSSsskk..',
+    '..kSSSsssssdk.',
+    '.kSSsssssssddk',
+    'kSsssssssssddk',
+    'kssssssssssddk',
+    'kssssssssddddk',
+    '.kkkkkkkkkkkk.',
+  ], { s: '#8a8598', S: '#b9b4c6', d: '#5f5a6e' }),
+  hongo: sprite([
+    '...kkkkkk...',
+    '.kkrrwwrrkk.',
+    'krrwwrrrrwrk',
+    'krrrrrrwwrrk',
+    'krwwrrrrwrrk',
+    'kkkkkkkkkkkk',
+    '...kwwwwk...',
+    '...kwwwwk...',
+    '...kwwwwk...',
+    '..kwwwwwwk..',
+    '..kkkkkkkk..',
+  ], { r: '#c4122f', w: '#f6ecd2' }),
+  tronco: sprite([
+    '.kkkkkkkkkkkkkk.',
+    'kcckBBBBBBBBBBBk',
+    'kckckBbBBBBbBBBk',
+    'kckckBBBBbBBBBBk',
+    'kckckbBBBBBBbBBk',
+    'kcckBBBbBBBBBBBk',
+    '.kkkkkkkkkkkkkk.',
+  ], { b: '#8a5a2b', B: '#b5722d', c: '#e0b070' }),
+  hojas: sprite([
+    '......kk......',
+    '....kkoykk....',
+    '..kkoyyorokk..',
+    '.koyorryoyyook',
+    'kyoorooyyoroyk',
+    'kooyyoroooyyok',
+    '.kkkkkkkkkkkk.',
+  ], { o: '#d8742a', y: '#ffcb3d', r: '#c4122f' }),
+  hueco: sprite([
+    'kBBbBBBBbBBk',
+    'kBbBBBbBBBBk',
+    'kBBBkkkkBBbk',
+    'kBBkhhhhkBBk',
+    'kBkhhhhhhkBk',
+    'kBkhhhhhhkBk',
+    'kBkhhhhhhkBk',
+    'kBBkhhhhkBBk',
+    'kbBBkkkkBBBk',
+    'kBBBBBbBBBBk',
+    'kBBbBBBBBbBk',
+    'kkBBBBBBBBkk',
+  ], { b: '#6b3f1d', B: '#8a5a2b', h: '#0d0b14' }),
+};
+document.documentElement.style.setProperty('--nut-gold', `url(${SPR.gold.url})`);
+document.querySelectorAll('.gnut').forEach(i => { i.src = SPR.gold.url; });
+$('hero').src = SPR.squirrel.url;
+
+// El símbolo ganador de los rodillos es la nuez dorada
+const T = `<img class="sym" alt="nuez dorada" src="${SPR.gold.url}">`;
 
 // Lo que muestra cada rodillo ahora mismo (arriba, centro, abajo)
 const showing = reels.map((_, i) => [rand(CONFIG.simbolos), CONFIG.simbolos[i], rand(CONFIG.simbolos)]);
@@ -509,8 +761,7 @@ let fichas = 0;
 for (let i = 0; i < CONFIG.fichas; i++) $('coins').insertAdjacentHTML('beforeend', '<i class="coin"></i>');
 function renderFichas() {
   [...document.querySelectorAll('.coin')].forEach((c, i) => c.classList.toggle('spent', i >= fichas));
-  $('hint').textContent = catching ? `Atrapaste ${fichas} de ${CONFIG.fichas}. Tocá las fichas que andan volando.`
-    : fichas === 1 ? 'Te queda 1 ficha.' : `Te quedan ${fichas} fichas.`;
+  $('hint').textContent = fichas === 1 ? 'Te queda 1 nuez dorada.' : `Te quedan ${fichas} nueces doradas.`;
 }
 
 // ---------- Sonido (sintetizado, sin archivos) ----------
@@ -538,61 +789,172 @@ function audio() {
   ctx.resume();
 }
 
-// ---------- Atrapar las fichas ----------
-// La máquina arranca vacía: hay que cazar las fichas que rebotan por la pantalla.
-let catching = true;
-const loose = [];
-function spawnLoose() {
-  statusEl.textContent = `SIN FICHAS. ¡ATRAPÁ ${CONFIG.fichas} PARA JUGAR!`;
-  lever.disabled = true;
-  for (let i = 0; i < CONFIG.fichasSueltas; i++) {
-    const el = document.createElement('button');
-    el.className = 'fly'; el.type = 'button'; el.textContent = '$';
-    el.setAttribute('aria-label', 'Atrapar ficha');
-    const a = Math.random() * Math.PI * 2, v = (reduced ? 1.2 : 2.6) + Math.random() * 1.6;
-    const c = { el, x: null, y: null, vx: Math.cos(a) * v, vy: Math.sin(a) * v };
-    el.addEventListener('pointerdown', e => { e.preventDefault(); grab(c); });
-    el.addEventListener('click', () => grab(c));   // teclado
-    el.style.visibility = 'hidden';
-    $('loose').appendChild(el);
-    loose.push(c);
-  }
-  requestAnimationFrame(drift);
+// ---------- Nueces doradas: se ganan en dos minijuegos ----------
+let doradas = 0;
+function ganarDorada() {
+  doradas++;
+  beep(988, .1, 'square', .1); beep(1319, .1, 'square', .1, .1); beep(1976, .4, 'square', .1, .2);
+  document.querySelectorAll('.goldbar').forEach(bar =>
+    [...bar.querySelectorAll('.gnut')].forEach((n, i) => {
+      n.classList.toggle('off', i >= doradas);
+      n.classList.toggle('got', i === doradas - 1);
+    }));
 }
-function drift() {
-  if (!catching) return;
-  const w = innerWidth - 52, h = innerHeight - 52;
-  for (const c of loose) {
-    if (c.gone || w <= 0 || h <= 0) continue;
-    if (c.x === null) { c.x = Math.random() * w; c.y = Math.random() * h; c.el.style.visibility = ''; }
-    c.x += c.vx; c.y += c.vy;
-    if (c.x < 0 || c.x > w) { c.vx *= -1; c.x = Math.max(0, Math.min(w, c.x)); }
-    if (c.y < 0 || c.y > h) { c.vy *= -1; c.y = Math.max(0, Math.min(h, c.y)); }
-    c.el.style.transform = `translate(${c.x}px, ${c.y}px)`;
-  }
-  requestAnimationFrame(drift);
+function go(id) {
+  ['intro', 'g1', 'g2', 'game'].forEach(x => { $(x).hidden = x !== id; });
+  $('hint').hidden = id !== 'game';
 }
-function grab(c) {
-  if (c.gone || !catching) return;
-  audio();
-  c.gone = true;
-  fichas++;
-  beep(988, .08, 'square', .1); beep(1319, .3, 'square', .1, .08);
-  // la ficha vuela hasta el contador de la máquina
-  const slot = document.querySelectorAll('.coin')[fichas - 1].getBoundingClientRect();
-  c.el.classList.add('caught');
-  c.el.style.transform = `translate(${slot.left - 16}px, ${slot.top - 16}px) scale(.35)`;
-  setTimeout(() => c.el.remove(), 500);
-  if (fichas === CONFIG.fichas) {
-    catching = false;
-    loose.forEach(o => { if (!o.gone) { o.gone = true; o.el.classList.add('caught'); setTimeout(() => o.el.remove(), 500); } });
-    statusEl.textContent = '¡FICHAS LISTAS! TIRÁ DE LA PALANCA';
-    lever.disabled = false;
-  }
+
+// --- Minijuego 1: la ardilla ataja las nueces que caen ---
+const G1 = { W: 120, H: 150, x: 60, tx: 60, dir: 1, nuts: [], got: 0, over: false, keys: {} };
+function playCatch() {
+  go('g1');
+  const cv = $('cv'), g = cv.getContext('2d'), { W, H } = G1, need = CONFIG.nuecesComunes;
+  cv.width = W; cv.height = H;
+  const msg = t => { $('g1msg').textContent = t; };
+  msg(`MOVÉ LA ARDILLA Y ATAJÁ ${need} NUECES`);
+  const stars = Array.from({ length: 22 }, () => [Math.floor(Math.random() * W), Math.floor(Math.random() * H * .7)]);
+  const aim = e => { const r = cv.getBoundingClientRect(); G1.tx = (e.clientX - r.left) / r.width * W; };
+  cv.addEventListener('pointerdown', aim);
+  cv.addEventListener('pointermove', aim);
+  const key = down => e => {
+    if (e.key === 'ArrowLeft') G1.keys.l = down;
+    if (e.key === 'ArrowRight') G1.keys.r = down;
+  };
+  addEventListener('keydown', key(true));
+  addEventListener('keyup', key(false));
+
+  const floorY = H - 10, top = floorY - 16;
+  let last = performance.now(), spawn = .6, blink = 0;
+  (function loop(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; blink += dt;
+    if (G1.keys.l) G1.tx = G1.x - 20;
+    if (G1.keys.r) G1.tx = G1.x + 20;
+    G1.tx = Math.max(8, Math.min(W - 8, G1.tx));
+    const dx = G1.tx - G1.x;
+    if (Math.abs(dx) > .5) { G1.dir = dx > 0 ? 1 : -1; G1.x += Math.sign(dx) * Math.min(Math.abs(dx), 170 * dt); }
+
+    spawn -= dt;
+    if (spawn <= 0 && !G1.over) {
+      if (G1.got < need) {
+        G1.nuts.push({ x: 8 + Math.random() * (W - 16), y: -14, v: 42 + Math.random() * 18 });
+        spawn = .7 + Math.random() * .45;
+      } else if (!G1.nuts.some(n => n.gold)) {
+        G1.nuts.push({ x: 12 + Math.random() * (W - 24), y: -12, v: 36, gold: true });
+        spawn = .8;
+      }
+    }
+    for (const n of G1.nuts) {
+      n.y += n.v * dt;
+      if (n.y + 14 >= top + 3 && n.y < floorY - 4 && Math.abs(n.x - G1.x) < 12) {
+        n.dead = true;
+        if (n.gold) {
+          G1.over = true;
+          ganarDorada();
+          msg(`¡FELICIDADES! RECUPERASTE UNA NUEZ DORADA. AHORA SOLO FALTAN ${CONFIG.fichas - doradas}`);
+          setTimeout(playHidden, 2600);
+        } else if (G1.got < need) {
+          G1.got++;
+          beep(660 + G1.got * 60, .09, 'square', .08);
+          msg(G1.got < need ? `NUECES: ${G1.got} DE ${need}` : '¡AHORA ATAJÁ LA DORADA!');
+        }
+      } else if (n.y > H) {
+        n.dead = true;
+        if (n.gold) msg('¡SE ESCAPÓ! AHÍ VIENE OTRA');
+      }
+    }
+    G1.nuts = G1.nuts.filter(n => !n.dead);
+
+    g.fillStyle = '#1a1626'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#f4eee0'; stars.forEach(([x, y], i) => { if ((i + Math.floor(blink * 2)) % 5) g.fillRect(x, y, 1, 1); });
+    g.fillStyle = '#2f8f46'; g.fillRect(0, floorY, W, 10);
+    g.fillStyle = '#1f5f30'; g.fillRect(0, floorY + 3, W, 7);
+    for (const n of G1.nuts) {
+      g.drawImage(n.gold ? SPR.gold : SPR.nut, Math.round(n.x - 7), Math.round(n.y));
+      if (n.gold && Math.floor(blink * 8) % 2) {
+        g.fillStyle = '#fff';
+        g.fillRect(Math.round(n.x - 10), Math.round(n.y + 2), 1, 1);
+        g.fillRect(Math.round(n.x + 9), Math.round(n.y + 9), 1, 1);
+        g.fillRect(Math.round(n.x + 6), Math.round(n.y - 2), 1, 1);
+      }
+    }
+    g.save();
+    g.translate(Math.round(G1.x), top);
+    g.scale(G1.dir, 1);
+    g.drawImage(SPR.squirrel, -8, 0);
+    g.restore();
+    if (!G1.over) requestAnimationFrame(loop);
+  })(last);
+}
+
+// --- Minijuego 2: nueces doradas escondidas en el bosque ---
+const ESCONDITES = [
+  ['hueco', 'el hueco del árbol'], ['arbusto', 'el arbusto'], ['hongo', 'el hongo'],
+  ['tronco', 'el tronco caído'], ['piedra', 'la piedra'], ['hojas', 'las hojas'],
+];
+const NADA = [['🐛', '¡Un gusano!'], ['🕸️', 'Telarañas...'], ['🐌', 'Un caracol'], ['💨', 'Acá no hay nada'], ['🍄', 'Otro hongo'], ['🪨', 'Una piedrita']];
+function playHidden() {
+  go('g2');
+  const faltan = CONFIG.fichas - doradas;
+  const msg = t => { $('g2msg').textContent = t; };
+  msg(`LAS OTRAS ${faltan} ESTÁN ESCONDIDAS EN EL BOSQUE. ¡TOCÁ PARA BUSCAR!`);
+  const order = ESCONDITES.map((_, i) => i).sort(() => Math.random() - .5);
+  const conNuez = new Set(order.slice(0, faltan));
+  const nada = [...NADA].sort(() => Math.random() - .5);
+  let busy2 = false;
+  $('forest').innerHTML = '';
+  ESCONDITES.forEach(([key, name], i) => {
+    const b = document.createElement('button');
+    b.className = 'spot'; b.type = 'button';
+    b.setAttribute('aria-label', 'Buscar en ' + name);
+    b.innerHTML = `<span class="found"></span><img class="sprite hide" alt="" src="${SPR[key].url}"><span class="what"></span>`;
+    b.addEventListener('click', () => {
+      if (busy2 || b.disabled) return;
+      busy2 = true;
+      b.classList.add('shake');
+      beep(220, .05, 'square', .05); beep(260, .05, 'square', .05, .12); beep(220, .05, 'square', .05, .24);
+      setTimeout(() => {
+        b.classList.remove('shake');
+        b.classList.add('done');
+        b.disabled = true;
+        busy2 = false;
+        if (conNuez.has(i)) {
+          b.querySelector('.found').innerHTML = `<img class="sprite" alt="" src="${SPR.gold.url}">`;
+          b.querySelector('.what').textContent = '¡Dorada!';
+          ganarDorada();
+          if (doradas >= CONFIG.fichas) {
+            busy2 = true;
+            msg(`¡FELICIDADES! RECUPERASTE LAS ${CONFIG.fichas} NUECES DORADAS. A LA MÁQUINA...`);
+            setTimeout(startSlot, 2600);
+          } else {
+            msg(`¡FELICIDADES! ENCONTRASTE UNA. AHORA SOLO FALTA${CONFIG.fichas - doradas > 1 ? 'N' : ''} ${CONFIG.fichas - doradas}`);
+          }
+        } else {
+          const [icon, text] = nada.pop();
+          b.querySelector('.found').innerHTML = `<span>${icon}</span>`;
+          b.querySelector('.what').textContent = text;
+          beep(180, .2, 'sawtooth', .05);
+          msg('SEGUÍ BUSCANDO...');
+        }
+      }, 520);
+    });
+    $('forest').appendChild(b);
+  });
+}
+
+function startSlot() {
+  go('game');
+  fichas = CONFIG.fichas;
   renderFichas();
+  statusEl.textContent = 'CADA NUEZ DORADA ES UN TIRO. ¡TIRÁ DE LA PALANCA!';
+  lever.disabled = false;
 }
+
+lever.disabled = true;
 renderFichas();
-spawnLoose();
+$('start').addEventListener('click', () => { audio(); beep(660, .08); beep(880, .15, 'square', .06, .08); playCatch(); });
+// Atajo para probar solo la máquina: agregar #palanca al final del link
+if (location.hash === '#palanca') startSlot();
 
 // ---------- Giro ----------
 // final = [arriba, centro, abajo]; el centro es la línea de pago
@@ -631,7 +993,7 @@ function outcome(restantes) {
 
 let busy = false;
 async function pull() {
-  if (busy || catching || fichas === 0) return;
+  if (busy || fichas === 0) return;
   busy = true;
   lever.disabled = true;
   audio();
