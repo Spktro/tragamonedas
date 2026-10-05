@@ -549,10 +549,10 @@ function spawnLoose() {
     el.className = 'fly'; el.type = 'button'; el.textContent = '$';
     el.setAttribute('aria-label', 'Atrapar ficha');
     const a = Math.random() * Math.PI * 2, v = (reduced ? 1.2 : 2.6) + Math.random() * 1.6;
-    const c = { el, x: Math.random() * (innerWidth - 60), y: Math.random() * (innerHeight - 60), vx: Math.cos(a) * v, vy: Math.sin(a) * v };
+    const c = { el, x: null, y: null, vx: Math.cos(a) * v, vy: Math.sin(a) * v };
     el.addEventListener('pointerdown', e => { e.preventDefault(); grab(c); });
     el.addEventListener('click', () => grab(c));   // teclado
-    el.style.transform = `translate(${c.x}px, ${c.y}px)`;
+    el.style.visibility = 'hidden';
     $('loose').appendChild(el);
     loose.push(c);
   }
@@ -562,7 +562,8 @@ function drift() {
   if (!catching) return;
   const w = innerWidth - 52, h = innerHeight - 52;
   for (const c of loose) {
-    if (c.gone) continue;
+    if (c.gone || w <= 0 || h <= 0) continue;
+    if (c.x === null) { c.x = Math.random() * w; c.y = Math.random() * h; c.el.style.visibility = ''; }
     c.x += c.vx; c.y += c.vy;
     if (c.x < 0 || c.x > w) { c.vx *= -1; c.x = Math.max(0, Math.min(w, c.x)); }
     if (c.y < 0 || c.y > h) { c.vy *= -1; c.y = Math.max(0, Math.min(h, c.y)); }
