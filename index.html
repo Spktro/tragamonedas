@@ -341,7 +341,7 @@ h1, h2, p { margin: 0; }
 .spot:focus-visible { outline: 3px dashed var(--gold); outline-offset: 4px; }
 .spot .found { position: absolute; left: 50%; bottom: 100%; width: 0; display: flex; justify-content: center; pointer-events: none; }
 .found img { width: 16.7cqw; flex: none; }
-.found .prize { width: 14.6cqw; animation: prize .7s steps(7) both, bob 1s steps(2) .7s infinite; filter: drop-shadow(0 0 6px var(--gold)); }
+.found .prize { width: 12.5cqw; animation: prize .7s steps(7) both, bob 1s steps(2) .7s infinite; filter: drop-shadow(0 0 6px var(--gold)); }
 @keyframes prize { 0% { transform: translateY(100%) scale(.2); } 60% { transform: translateY(-40%) scale(1.25); } 100% { transform: none; } }
 .found .bob { animation: popout .5s steps(5) both, bob 1s steps(2) .5s infinite; }
 @keyframes popout { 0% { transform: translateY(100%) scale(.2); opacity: 0; } 60% { transform: translateY(-30%); opacity: 1; } 100% { transform: none; opacity: 1; } }
@@ -794,6 +794,10 @@ function pix(emoji) {
   const g = c.getContext('2d');
   g.font = '13px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText(emoji, 8, 9);
+  // bordes duros: cada píxel queda lleno o vacío
+  const d = g.getImageData(0, 0, 16, 16);
+  for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] > 90 ? 255 : 0;
+  g.putImageData(d, 0, 0);
   return c.toDataURL();
 }
 // Fondo de bosque de noche, pintado píxel por píxel (siempre igual: la "suerte" tiene semilla fija)
