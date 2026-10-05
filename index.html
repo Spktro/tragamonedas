@@ -320,7 +320,7 @@ h1, h2, p { margin: 0; }
 }
 @keyframes throb { 50% { transform: scale(1.06); color: #fff; } }
 .pre { display: flex; flex-direction: column; align-items: center; gap: 22px; }
-.pre.off { visibility: hidden; }
+.pre.off, .pre.off .cue.on { visibility: hidden; animation: none; }
 .pre.off .jackpot { animation: none; }
 .tease {
   font-family: var(--display);
@@ -552,6 +552,7 @@ function spawnLoose() {
     const c = { el, x: Math.random() * (innerWidth - 60), y: Math.random() * (innerHeight - 60), vx: Math.cos(a) * v, vy: Math.sin(a) * v };
     el.addEventListener('pointerdown', e => { e.preventDefault(); grab(c); });
     el.addEventListener('click', () => grab(c));   // teclado
+    el.style.transform = `translate(${c.x}px, ${c.y}px)`;
     $('loose').appendChild(el);
     loose.push(c);
   }
