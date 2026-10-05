@@ -199,6 +199,27 @@ h1, h2, p { margin: 0; }
 }
 .coin.spent { opacity: .18; transform: translateY(4px); box-shadow: 0 0 0 2px var(--muted); background: var(--muted); }
 
+/* ---------- Fichas sueltas para atrapar ---------- */
+#loose { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.fly {
+  position: absolute; left: 0; top: 0;
+  width: 52px; height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--gold);
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 3px var(--gold-dark), inset -6px -6px 0 var(--gold-dark), inset 4px 4px 0 #fff3b0, 0 0 18px rgba(255,203,61,.6);
+  font-family: var(--display);
+  font-size: 16px;
+  color: var(--gold-dark);
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+.fly.caught { pointer-events: none; transition: transform .45s cubic-bezier(.5,-0.4,.8,.6), opacity .45s; opacity: 0; }
+
 /* ---------- Palanca ---------- */
 .lever {
   position: relative;
@@ -298,11 +319,20 @@ h1, h2, p { margin: 0; }
   animation: throb .5s steps(2) infinite;
 }
 @keyframes throb { 50% { transform: scale(1.06); color: #fff; } }
-.jackpot.off { visibility: hidden; animation: none; }
+.pre { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.pre.off { visibility: hidden; }
+.pre.off .jackpot { animation: none; }
+.tease {
+  font-family: var(--display);
+  font-size: clamp(11px, 3.4vw, 20px);
+  line-height: 1.7;
+  color: var(--text);
+  text-wrap: balance;
+}
 .win { display: flex; flex-direction: column; gap: 10px; }
 .win .lead {
   font-family: var(--display);
-  font-size: clamp(11px, 3.4vw, 22px);
+  font-size: clamp(14px, 4.6vw, 32px);
   line-height: 1.6;
   color: var(--gold);
   text-shadow: 2px 2px 0 var(--ink);
@@ -315,6 +345,12 @@ h1, h2, p { margin: 0; }
   color: #fff;
   text-shadow: 4px 4px 0 var(--cabinet), 8px 8px 0 var(--ink);
   text-wrap: balance;
+}
+.win.on .band { animation: jitter .14s steps(2) infinite; }
+@keyframes jitter {
+  0% { transform: translate(-3px, 2px) rotate(-.5deg); }
+  50% { transform: translate(3px, -2px) rotate(.5deg); }
+  100% { transform: translate(-2px, -3px) rotate(0); }
 }
 .ticket {
   display: inline-flex;
@@ -365,7 +401,7 @@ h1, h2, p { margin: 0; }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops { animation: none !important; }
+  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops, .win.on .band { animation: none !important; }
 }
 </style>
 </head>
@@ -385,7 +421,7 @@ h1, h2, p { margin: 0; }
       <div class="payline"></div>
     </div>
     <div class="panel">
-      <p class="status" id="status" aria-live="polite">TIRÁ DE LA PALANCA</p>
+      <p class="status" id="status" aria-live="polite"></p>
       <div class="coins" id="coins" aria-hidden="true"><span>FICHAS</span></div>
     </div>
   </div>
@@ -397,7 +433,11 @@ h1, h2, p { margin: 0; }
 
 <section class="stage" id="stage" aria-live="polite">
   <div class="headline">
-    <p class="jackpot" id="jackpot">¡JACKPOT!</p>
+    <div class="pre" id="pre">
+      <p class="jackpot" id="jackpot">¡JACKPOT!</p>
+      <p class="tease cue" id="tease1"></p>
+      <p class="tease cue" id="tease2"></p>
+    </div>
     <div class="win cue" id="win">
       <p class="lead" id="lead"></p>
       <h2 class="band" id="band"></h2>
@@ -409,31 +449,38 @@ h1, h2, p { margin: 0; }
   <p class="help" id="help" hidden>Tocá el video para cobrar tu premio ▲ <a id="ytlink" href="#" target="_blank" rel="noopener">(o abrilo en YouTube)</a></p>
 </section>
 
+<div id="loose"></div>
 <div id="flash" aria-hidden="true"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <script>
 // ====== Lo único que hay que tocar para personalizar el regalo ======
 const CONFIG = {
-  fichas: 3,                      // tiros disponibles; gana recién en el último
+  fichas: 3,                      // fichas que hay que atrapar = tiros; gana recién en el último
+  fichasSueltas: 5,               // cuántas andan volando por la pantalla
   perdiste: [                     // mensaje después de cada tiro fallido
     'CASI... SEGUÍ INTENTANDO, ¡PODÉS LLEGAR A GANAR!',
-    '¡UFF, POR UNO! ÚLTIMA FICHA, ¡AHORA SALE!',
+    '¡UFF, DOS NUECES Y LA TERCERA SE PASÓ! ÚLTIMA FICHA...',
   ],
 
   videoId: 'eBG7P-K-r1Y',         // ID de YouTube (Everlong). Es lo que va después de "v=" en la URL
-  videoAparece: 5,                // segundo del video en que deja de ser solo música y aparece la imagen
+  // Antesala: solo música, JACKPOT temblando y estos dos carteles
+  intriga1En: 3,
+  intriga1: 'TRES NUECES 🌰🌰🌰',
+  intriga2En: 9,
+  intriga2: 'PERO UNA ARDILLA COMO VOS MERECE ALGO MEJOR...',
+  videoAparece: 13,               // segundo del video en que deja de ser solo música y aparece la imagen
   // Carteles: en qué segundo del video aparece cada uno
   premioEn: 16,
   lead: 'GANASTE 2 ENTRADAS PARA VER A',
   band: 'FOO FIGHTERS',
   fechaEn: 20,
-  fecha: '25 DE NOVIEMBRE',
+  fecha: '25 DE FEBRERO',
   lugar: '',                      // ej. 'ESTADIO RIVER PLATE' (vacío = no se muestra)
   notaEn: 24,
   nota: 'VAMOS JUNTOS, ¿QUERÉS? ♥',
 
-  premio: '🎟️',
+  premio: '🌰',
   simbolos: ['🎸', '🥁', '🤘', '⚡', '🎤', '🍒', '⭐'],
 };
 // ====================================================================
@@ -457,13 +504,13 @@ function fill(reel, symbols) {
 reels.forEach((r, i) => fill(r, showing[i]));
 
 // ---------- Fichas ----------
-let fichas = CONFIG.fichas;
+let fichas = 0;
 for (let i = 0; i < CONFIG.fichas; i++) $('coins').insertAdjacentHTML('beforeend', '<i class="coin"></i>');
 function renderFichas() {
   [...document.querySelectorAll('.coin')].forEach((c, i) => c.classList.toggle('spent', i >= fichas));
-  $('hint').textContent = fichas === 1 ? 'Te queda 1 ficha.' : `Te quedan ${fichas} fichas.`;
+  $('hint').textContent = catching ? `Atrapaste ${fichas} de ${CONFIG.fichas}. Tocá las fichas que andan volando.`
+    : fichas === 1 ? 'Te queda 1 ficha.' : `Te quedan ${fichas} fichas.`;
 }
-renderFichas();
 
 // ---------- Sonido (sintetizado, sin archivos) ----------
 let ctx;
@@ -484,6 +531,65 @@ function fanfare() {
   [523, 659, 784, 1047, 784, 1047, 1319, 1568, 1319, 1568, 2093].forEach((f, i) => beep(f, .16, 'square', .08, i * .11));
   for (let i = 0; i < 14; i++) beep(1800 + Math.random() * 1400, .07, 'triangle', .05, .2 + i * .12);
 }
+
+function audio() {
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  ctx.resume();
+}
+
+// ---------- Atrapar las fichas ----------
+// La máquina arranca vacía: hay que cazar las fichas que rebotan por la pantalla.
+let catching = true;
+const loose = [];
+function spawnLoose() {
+  statusEl.textContent = `SIN FICHAS. ¡ATRAPÁ ${CONFIG.fichas} PARA JUGAR!`;
+  lever.disabled = true;
+  for (let i = 0; i < CONFIG.fichasSueltas; i++) {
+    const el = document.createElement('button');
+    el.className = 'fly'; el.type = 'button'; el.textContent = '$';
+    el.setAttribute('aria-label', 'Atrapar ficha');
+    const a = Math.random() * Math.PI * 2, v = (reduced ? 1.2 : 2.6) + Math.random() * 1.6;
+    const c = { el, x: Math.random() * (innerWidth - 60), y: Math.random() * (innerHeight - 60), vx: Math.cos(a) * v, vy: Math.sin(a) * v };
+    el.addEventListener('pointerdown', e => { e.preventDefault(); grab(c); });
+    el.addEventListener('click', () => grab(c));   // teclado
+    $('loose').appendChild(el);
+    loose.push(c);
+  }
+  requestAnimationFrame(drift);
+}
+function drift() {
+  if (!catching) return;
+  const w = innerWidth - 52, h = innerHeight - 52;
+  for (const c of loose) {
+    if (c.gone) continue;
+    c.x += c.vx; c.y += c.vy;
+    if (c.x < 0 || c.x > w) { c.vx *= -1; c.x = Math.max(0, Math.min(w, c.x)); }
+    if (c.y < 0 || c.y > h) { c.vy *= -1; c.y = Math.max(0, Math.min(h, c.y)); }
+    c.el.style.transform = `translate(${c.x}px, ${c.y}px)`;
+  }
+  requestAnimationFrame(drift);
+}
+function grab(c) {
+  if (c.gone || !catching) return;
+  audio();
+  c.gone = true;
+  fichas++;
+  beep(988, .08, 'square', .1); beep(1319, .3, 'square', .1, .08);
+  // la ficha vuela hasta el contador de la máquina
+  const slot = document.querySelectorAll('.coin')[fichas - 1].getBoundingClientRect();
+  c.el.classList.add('caught');
+  c.el.style.transform = `translate(${slot.left - 16}px, ${slot.top - 16}px) scale(.35)`;
+  setTimeout(() => c.el.remove(), 500);
+  if (fichas === CONFIG.fichas) {
+    catching = false;
+    loose.forEach(o => { if (!o.gone) { o.gone = true; o.el.classList.add('caught'); setTimeout(() => o.el.remove(), 500); } });
+    statusEl.textContent = '¡FICHAS LISTAS! TIRÁ DE LA PALANCA';
+    lever.disabled = false;
+  }
+  renderFichas();
+}
+renderFichas();
+spawnLoose();
 
 // ---------- Giro ----------
 // final = [arriba, centro, abajo]; el centro es la línea de pago
@@ -522,11 +628,10 @@ function outcome(restantes) {
 
 let busy = false;
 async function pull() {
-  if (busy || fichas === 0) return;
+  if (busy || catching || fichas === 0) return;
   busy = true;
   lever.disabled = true;
-  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-  ctx.resume();
+  audio();
 
   fichas--;
   renderFichas();
@@ -560,7 +665,7 @@ machine.addEventListener('click', pull);
 
 // ---------- Festejo y premio ----------
 async function celebrate() {
-  statusEl.textContent = '¡¡¡TICKET TICKET TICKET!!!';
+  statusEl.textContent = '¡¡¡NUEZ, NUEZ, NUEZ!!!';
   $('hint').textContent = '';
   machine.classList.add('winning');
   fanfare();
@@ -580,8 +685,11 @@ function startShow() {
   $('band').textContent = CONFIG.band;
   $('ticket').innerHTML = [CONFIG.fecha, CONFIG.lugar].filter(Boolean).map(t => `<span>${t}</span>`).join('');
   $('note').textContent = CONFIG.nota;
+  $('tease1').textContent = CONFIG.intriga1;
+  $('tease2').textContent = CONFIG.intriga2;
   $('ytlink').href = `https://www.youtube.com/watch?v=${CONFIG.videoId}`;
   stage.classList.add('on');
+  if (!reduced) $('jackpot').classList.add('quake');
 
   try { player.unMute(); player.setVolume(100); player.playVideo(); } catch (e) {}
   setInterval(tick, 200);
@@ -590,8 +698,10 @@ function startShow() {
 }
 
 const cues = [
+  ['intriga1En', () => show('tease1')],
+  ['intriga2En', () => show('tease2', true)],
   ['videoAparece', () => $('video').classList.add('on')],
-  ['premioEn', () => { $('jackpot').classList.add('off'); show('win', true); }],
+  ['premioEn', () => { $('pre').classList.add('off'); show('win', true); }],
   ['fechaEn', () => show('ticket')],
   ['notaEn', () => show('note')],
 ];
