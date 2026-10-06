@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tragamonedas</title>
+<title>La Nuez de la Fortuna</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
@@ -58,6 +58,7 @@ h1, h2, p { margin: 0; }
 
 /* ---------- Juego ---------- */
 .game {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -67,6 +68,7 @@ h1, h2, p { margin: 0; }
 }
 
 .machine {
+  position: relative;
   background: var(--cabinet);
   border: var(--px) solid var(--ink);
   box-shadow:
@@ -364,6 +366,133 @@ h1, h2, p { margin: 0; }
   100% { transform: translate(-40%, -420%); opacity: 0; }
 }
 
+/* ---------- Minijuego 3: las bellotas (dónde quedó la nuez) ---------- */
+.cups {
+  position: relative;
+  width: min(100%, 500px, 60vh);
+  aspect-ratio: 96 / 70;
+  container-type: inline-size;
+  overflow: hidden;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 var(--px) var(--gold);
+  background: var(--night-2);
+}
+.cups .bg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.cup {
+  position: absolute;
+  bottom: 22%;
+  width: 17%;
+  margin-left: -8.5%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  z-index: 2;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: left var(--d, .4s) cubic-bezier(.4,0,.6,1), transform .25s steps(4);
+}
+.cup::before { content: ""; position: absolute; inset: -10px; }
+.cup img { display: block; width: 100%; }
+.cup.up { transform: translateY(-75%); }
+.cup.arc-a img { animation: arc-a var(--d) linear; }
+.cup.arc-b img { animation: arc-b var(--d) linear; }
+@keyframes arc-a { 50% { transform: translateY(-40%); } }
+@keyframes arc-b { 50% { transform: translateY(28%); } }
+.cup:focus-visible { outline: 3px dashed var(--gold); outline-offset: 4px; }
+.cupnut { position: absolute; bottom: 23%; width: 11%; margin-left: -5.5%; z-index: 1; filter: drop-shadow(0 0 6px var(--gold)); }
+/* La ardilla mira desde adelante, a contraluz */
+.shadow-sq {
+  position: absolute; left: -5%; bottom: -5%;
+  width: 34%;
+  z-index: 3;
+  pointer-events: none;
+  transform-origin: bottom center;
+  animation: idle 1.6s steps(2) infinite;
+}
+@keyframes idle { 50% { transform: scaleY(1.05); } }
+.shadow-sq.hop { animation: sqhop .16s steps(3) 6 alternate; }
+@keyframes sqhop { to { transform: translateY(-9%); } }
+.shadow-sq.oops { animation: sad .12s steps(2) 8; }
+.drop {
+  position: absolute; left: 24%; bottom: 40%;
+  width: 1.7cqw; height: 2.8cqw;
+  background: #7fd1ff;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  z-index: 4;
+  pointer-events: none;
+  animation: drop .8s steps(8) forwards;
+}
+@keyframes drop { 0% { transform: none; opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+
+/* ---------- La máquina abandonada ---------- */
+.story {
+  max-width: 500px;
+  min-height: 5.1em;
+  font-family: var(--display);
+  font-size: clamp(10px, 3vw, 13px);
+  line-height: 1.7;
+  color: var(--gold);
+  text-align: center;
+  text-wrap: balance;
+  display: flex; align-items: center;
+}
+.machine.off { background: #4b2a31; box-shadow: 0 var(--px) 0 var(--px) var(--ink), 0 18px 0 -2px rgba(0,0,0,.45); }
+.machine .marquee, .machine .window, .machine .panel { transition: filter .7s; }
+.machine.off .marquee, .machine.off .window, .machine.off .panel { filter: grayscale(1) brightness(.38); }
+.machine.off.lit1 .marquee, .machine.off.lit2 .window { filter: none; }
+.machine.off .bulbs i { animation: none; }
+.machine.off.lit1 .bulbs i:nth-child(odd)  { animation: bulb 1s steps(1) infinite; }
+.machine.off.lit1 .bulbs i:nth-child(even) { animation: bulb 1s steps(1) infinite .5s; }
+#grime { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.dirt {
+  position: absolute;
+  padding: 0; border: 0; background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity .2s steps(3);
+}
+.dirt img { display: block; width: 100%; }
+.dirt.flip img { transform: scaleX(-1); }
+.dirt.shake { animation: rustle .25s steps(4); }
+.dirt.gone { pointer-events: none; animation: fall .6s steps(6) forwards; }
+@keyframes fall { to { transform: translateY(60px) rotate(25deg); opacity: 0; } }
+.tray { display: flex; align-items: center; gap: 18px; min-height: 64px; }
+.tray button {
+  width: 56px; height: 56px;
+  padding: 0; border: 0;
+  background: var(--nut-gold) center / contain no-repeat;
+  image-rendering: pixelated;
+  cursor: pointer;
+  filter: drop-shadow(0 0 8px var(--gold));
+  animation: hop .6s steps(2) infinite;
+  transition: transform .45s cubic-bezier(.5,-0.3,.8,.6), opacity .45s;
+}
+.tray button:nth-child(2) { animation-delay: -.2s; }
+.tray button:nth-child(3) { animation-delay: -.4s; }
+.tray button.in { animation: none; transform: translateY(-160px) scale(.3); opacity: 0; pointer-events: none; }
+
+/* El foquito de arriba de la máquina */
+.foco {
+  position: absolute; left: 50%; top: -24px;
+  width: 30px; height: 24px;
+  margin-left: -15px;
+  background: #5a0d1a;
+  border: var(--px) solid var(--ink);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+}
+.machine.off .foco { background: #2a2026; }
+.foco.blink { animation: foco .5s steps(2) 1; }
+@keyframes foco { 0%, 100% { background: #5a0d1a; box-shadow: none; } 50% { background: #ff4d5e; box-shadow: 0 0 26px 10px #ff4d5e; } }
+.foco.sirena { animation: sirena .45s steps(1) infinite; }
+@keyframes sirena {
+  0% { background: #ff4d5e; box-shadow: -20px -4px 28px 8px #ff4d5e; }
+  50% { background: #ffcb3d; box-shadow: 20px -4px 28px 8px #ffcb3d; }
+}
+
 /* En la máquina, las fichas son las nueces doradas */
 .coins .coin, .coins .coin.spent {
   width: 24px; height: 24px;
@@ -589,7 +718,7 @@ h1, h2, p { margin: 0; }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops, .win .band.on, #hero.on, .firefly, .spot .hide { animation: none !important; }
+  .bulbs i, .lever .knob, .winning .payline, .winning .reel, .jackpot, .quake, #flash.go, .status.oops, .win .band.on, #hero.on, .firefly, .spot .hide, .shadow-sq, .foco.sirena, .tray button { animation: none !important; }
 }
 </style>
 </head>
@@ -616,11 +745,19 @@ h1, h2, p { margin: 0; }
   <div class="forest" id="forest"></div>
 </section>
 
+<section class="screen" id="g3" hidden>
+  <div class="goldbar" aria-hidden="true"><span>NUECES DORADAS</span><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""><img class="sprite gnut off" alt=""></div>
+  <h2 id="g3msg" aria-live="polite"></h2>
+  <div class="cups" id="cups"></div>
+</section>
+
+<p class="story" id="story" aria-live="polite" hidden></p>
 <main class="game" id="game" hidden>
   <div class="machine" id="machine">
+    <i class="foco" id="foco" aria-hidden="true"></i>
     <div class="marquee">
       <div class="bulbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <h1>LA MÁQUINA DE LA SUERTE</h1>
+      <h1>LA NUEZ DE LA FORTUNA</h1>
       <div class="bulbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="window" aria-hidden="true">
@@ -637,7 +774,9 @@ h1, h2, p { margin: 0; }
   <button class="lever" id="lever" type="button" aria-label="Tirar de la palanca">
     <span class="base"></span><span class="rod"></span><span class="knob"></span>
   </button>
+  <div id="grime"></div>
 </main>
+<div class="tray" id="tray" hidden></div>
 <p class="hint" id="hint" hidden></p>
 
 <section class="stage" id="stage" aria-live="polite">
@@ -675,7 +814,8 @@ const CONFIG = {
     'PERO UN DÍA SE LE PERDIERON EN EL BOSQUE...',
     'AHORA TIENE QUE RECUPERARLAS PARA ACTIVAR EL PORTAL.',
   ],
-  nuecesComunes: 5,               // cuántas hay que atajar antes de que caiga la dorada
+  nuecesComunes: 5,
+  aciertosBellotas: 3,            // veces que hay que acertar dónde quedó la nuez               // cuántas hay que atajar antes de que caiga la dorada
   // Última tirada: carteles del suspenso
   ultimaTirada: '¡ÚLTIMA NUEZ! VAMOS, ESTA VEZ NO PODÉS FALLAR...',
   faltaUna: 'DOS NUECES... FALTA UNA...',
@@ -898,6 +1038,52 @@ SPR.feliz = sprite([
   '...kkook..kookk.',
   '...kkkk...kkkk..',
 ], { T: '#e89a55', t: '#c96a2b', o: '#b5722d', w: '#f6ecd2', P: '#ff8fa3' });
+SPR.bellota = sprite([
+  '.....kk.....',
+  '....kkk.....',
+  '..kkkkkkkk..',
+  '.kccCccCcck.',
+  'kcCccCccCcck',
+  'kccCccCccCck',
+  'kkkkkkkkkkkk',
+  '.kbBbbbbbbk.',
+  '.kbBbbbbbbk.',
+  '.kbBbbbbbbk.',
+  '.kbbbbbbbbk.',
+  '..kbbbbbbk..',
+  '...kbbbbk...',
+  '....kkkk....',
+], { c: '#6b3f1d', C: '#8a5a2b', b: '#c98a3c', B: '#e9b866' });
+SPR.telarana = sprite([
+  'wwwwwwwwwwww',
+  'ww.w..w...w.',
+  'w.ww..w..w..',
+  'ww.www.ww...',
+  'w..w.ww.....',
+  'w..w.w.w....',
+  'wwww.w..w...',
+  'w..ww....w..',
+  'w.w..w......',
+  'ww....w.....',
+  'w......w....',
+  'w...........',
+], { w: '#d9d4e6' });
+SPR.enredadera = sprite([
+  '..g...', '.Gg...', 'GGg...', '..gG..', '..gGG.', '..g...', '.Gg...', 'GGg...',
+  '..g...', '..gG..', '..gGG.', '.gg...', '.g....', 'Gg....', 'GGg...', '..g...',
+  '..gG..', '..gGG.', '..g...', '.Gg...', 'GGg...', '..g...', '..gG..', '..g...',
+], { g: '#1f5f30', G: '#2f8f46' });
+// Silueta a contraluz de cualquier dibujo
+function silueta(src) {
+  const c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d');
+  g.drawImage(src, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = '#07060c';
+  g.fillRect(0, 0, c.width, c.height);
+  return c.toDataURL();
+}
 document.documentElement.style.setProperty('--nut-gold', `url(${SPR.gold.url})`);
 document.querySelectorAll('.gnut, .tnut').forEach(i => { i.src = SPR.gold.url; });
 $('hero').src = SPR.squirrel.url;
@@ -960,7 +1146,8 @@ function ganarDorada() {
     }));
 }
 function go(id) {
-  ['intro', 'g1', 'g2', 'game'].forEach(x => { $(x).hidden = x !== id; });
+  ['intro', 'g1', 'g2', 'g3', 'game'].forEach(x => { $(x).hidden = x !== id; });
+  $('story').hidden = $('tray').hidden = true;
   $('hint').hidden = id !== 'game';
 }
 
@@ -1061,12 +1248,10 @@ const BICHOS = [
 ];
 function playHidden() {
   go('g2');
-  const faltan = CONFIG.fichas - doradas;
   const msg = t => { $('g2msg').textContent = t; };
-  msg(`LAS OTRAS ${faltan} ESTÁN ESCONDIDAS EN EL BOSQUE. ¡TOCÁ DONDE QUIERAS BUSCAR!`);
-  // Está arreglado por orden de toque, no por lugar: los dos primeros nunca tienen nuez
-  const plan = [false, false];
-  for (let i = 0; i < faltan; i++) { plan.push(true); if (i < faltan - 1) plan.push(false); }
+  msg('OTRA NUEZ DORADA ESTÁ ESCONDIDA EN EL BOSQUE. ¡TOCÁ DONDE QUIERAS BUSCAR!');
+  // Está arreglado por orden de toque, no por lugar: los tres primeros nunca tienen nuez
+  const plan = [false, false, false, true];
   const bichos = [...BICHOS].sort(() => Math.random() - .5);
   let toques = 0, busy2 = false;
   const forest = $('forest');
@@ -1097,14 +1282,9 @@ function playHidden() {
         if (plan[toques++]) {
           b.querySelector('.found').innerHTML = `<img class="sprite prize" alt="" src="${SPR.gold.url}">`;
           ganarDorada();
-          if (doradas >= CONFIG.fichas) {
-            busy2 = true;
-            if (!reduced) confetti(2500);
-            msg(`¡FELICIDADES! RECUPERASTE LAS ${CONFIG.fichas} NUECES DORADAS. ¡EL PORTAL SE ACTIVÓ!`);
-            setTimeout(startSlot, 3000);
-          } else {
-            msg(`¡FELICIDADES! ENCONTRASTE UNA. AHORA SOLO FALTA${CONFIG.fichas - doradas > 1 ? 'N' : ''} ${CONFIG.fichas - doradas}`);
-          }
+          busy2 = true;
+          msg(`¡FELICIDADES! ENCONTRASTE OTRA. AHORA SOLO FALTA ${CONFIG.fichas - doradas}`);
+          setTimeout(playCups, 2800);
         } else {
           const [icon, text, anim] = bichos.pop();
           b.querySelector('.found').innerHTML = `<img class="sprite ${anim}" alt="" src="${pix(icon)}">`;
@@ -1118,12 +1298,190 @@ function playHidden() {
   });
 }
 
+// --- Minijuego 3: las bellotas. La nuez queda debajo de una, se mezclan y hay que seguirla ---
+function playCups() {
+  go('g3');
+  const msg = t => { $('g3msg').textContent = t; };
+  const scene = $('cups'), SLOTS = [40, 61, 82], need = CONFIG.aciertosBellotas;
+  scene.innerHTML = '';
+  const bg = paintForest(96, 70, 46, false);
+  bg.className = 'bg';
+  scene.appendChild(bg);
+  scene.insertAdjacentHTML('beforeend',
+    `<img class="sprite cupnut" alt="" src="${SPR.gold.url}"><img class="sprite shadow-sq" id="sq" alt="" src="${silueta(SPR.squirrel)}">`);
+  const nut = scene.querySelector('.cupnut'), sq = $('sq');
+  const pos = [0, 1, 2];                       // pos[bellota] = lugar que ocupa
+  let gold = 0, aciertos = 0, lento = 0, locked = true;
+  const cups = SLOTS.map((x, i) => {
+    const b = document.createElement('button');
+    b.className = 'cup'; b.type = 'button';
+    b.setAttribute('aria-label', 'Bellota ' + (i + 1));
+    b.style.left = x + '%';
+    b.innerHTML = `<img class="sprite" alt="" src="${SPR.bellota.url}">`;
+    b.addEventListener('click', () => choose(i));
+    scene.appendChild(b);
+    return b;
+  });
+  const act = cls => { sq.classList.remove('hop', 'oops'); sq.getBoundingClientRect(); sq.classList.add(cls); };
+  const showNut = () => { nut.style.left = SLOTS[pos[gold]] + '%'; nut.hidden = false; };
+
+  async function ronda() {
+    locked = true;
+    gold = Math.floor(Math.random() * 3);
+    msg(`MIRÁ BIEN DÓNDE QUEDA LA NUEZ (${aciertos + 1} DE ${need})`);
+    showNut();
+    cups[gold].classList.add('up');
+    await wait(1300);
+    cups[gold].classList.remove('up');
+    await wait(450);
+    nut.hidden = true;
+    const cambios = 4 + aciertos * 2, dur = Math.max(240, 440 - aciertos * 80) + lento;
+    scene.style.setProperty('--d', dur + 'ms');
+    for (let k = 0; k < cambios; k++) {
+      const a = Math.floor(Math.random() * 3), b = (a + 1 + Math.floor(Math.random() * 2)) % 3;
+      [pos[a], pos[b]] = [pos[b], pos[a]];
+      cups[a].classList.add('arc-a'); cups[b].classList.add('arc-b');
+      cups[a].style.left = SLOTS[pos[a]] + '%'; cups[b].style.left = SLOTS[pos[b]] + '%';
+      beep(300 + k * 30, .05, 'square', .04);
+      await wait(dur + 70);
+      cups[a].classList.remove('arc-a'); cups[b].classList.remove('arc-b');
+    }
+    msg('¿DÓNDE QUEDÓ LA NUEZ DORADA?');
+    locked = false;
+  }
+  async function choose(i) {
+    if (locked) return;
+    locked = true;
+    showNut();
+    cups[i].classList.add('up');
+    if (i === gold) {
+      aciertos++;
+      lento = 0;
+      act('hop');
+      beep(880, .08, 'square', .08); beep(1175, .08, 'square', .08, .09); beep(1568, .2, 'square', .08, .18);
+      if (aciertos >= need) {
+        ganarDorada();
+        if (!reduced) confetti(2500);
+        msg(`¡FELICIDADES! RECUPERASTE LAS ${CONFIG.fichas} NUECES DORADAS`);
+        setTimeout(startSlot, 3000);
+        return;
+      }
+      msg(`¡AHÍ ESTABA! VAN ${aciertos} DE ${need}`);
+      await wait(1400);
+      cups[i].classList.remove('up');
+      await wait(450);
+      ronda();
+    } else {
+      act('oops');
+      for (let k = 0; k < 4; k++) scene.insertAdjacentHTML('beforeend',
+        `<i class="drop" style="--dx:${-30 + k * 22}px;--dy:${-34 - (k % 2) * 16}px;animation-delay:${k * .08}s"></i>`);
+      setTimeout(() => scene.querySelectorAll('.drop').forEach(d => d.remove()), 1300);
+      womp();
+      msg('¡UY, AHÍ NO ESTABA! OTRA VEZ, MÁS DESPACITO');
+      await wait(800);
+      cups[gold].classList.add('up');
+      await wait(1300);
+      cups[i].classList.remove('up'); cups[gold].classList.remove('up');
+      await wait(450);
+      lento += 170;
+      ronda();
+    }
+  }
+  ronda();
+}
+
+// --- La máquina abandonada: hay que limpiarla a toques y después meterle las tres nueces ---
+let lista = false;
+// [dibujo, izquierda %, arriba %, ancho %, toques para sacarlo, espejado]
+const MUGRE = [
+  ['telarana', -1, -2, 30, 3], ['telarana', 59, -2, 30, 3, true], ['enredadera', 3, 20, 11, 4], ['enredadera', 73, 14, 11, 4, true],
+  ['telarana', 24, 34, 26, 2], ['telarana', 44, 46, 24, 2, true], ['arbusto', 4, 76, 36, 4], ['hojas', 44, 82, 36, 3], ['enredadera', 40, 2, 9, 3],
+];
 function startSlot() {
   go('game');
+  $('hint').hidden = true;
+  fichas = 0;
+  renderFichas();
+  lista = false;
+  lever.disabled = true;
+  machine.classList.add('off');
+  statusEl.textContent = '';
+  const story = $('story'), grime = $('grime');
+  story.hidden = false;
+  story.textContent = 'EN UN CLARO DEL BOSQUE, LA ARDILLA ENCONTRÓ LA NUEZ DE LA FORTUNA... VIEJA Y ABANDONADA. ¡TOCÁ VARIAS VECES PARA LIMPIARLA!';
+  grime.innerHTML = '';
+  let quedan = MUGRE.length;
+  MUGRE.forEach(([key, left, top, width, toques, flip]) => {
+    const b = document.createElement('button');
+    b.className = 'dirt' + (flip ? ' flip' : ''); b.type = 'button';
+    b.setAttribute('aria-label', 'Limpiar');
+    b.style.cssText = `left:${left}%;top:${top}%;width:${width}%`;
+    b.innerHTML = `<img class="sprite" alt="" src="${SPR[key].url}">`;
+    let faltan = toques;
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      audio();
+      faltan--;
+      beep(200 + (toques - faltan) * 70, .05, 'square', .05);
+      if (faltan > 0) {
+        b.style.opacity = .35 + .65 * faltan / toques;
+        b.classList.remove('shake'); b.getBoundingClientRect(); b.classList.add('shake');
+        return;
+      }
+      b.classList.add('gone');
+      setTimeout(() => b.remove(), 650);
+      if (--quedan === 0) setTimeout(pedirNueces, 700);
+      else story.textContent = quedan === 1 ? '¡YA CASI! FALTA UNA SOLA COSA POR LIMPIAR' : `¡ASÍ! SEGUÍ LIMPIANDO, FALTAN ${quedan} COSAS`;
+    });
+    grime.appendChild(b);
+  });
+}
+function pedirNueces() {
+  const story = $('story'), tray = $('tray');
+  story.textContent = '¡QUEDÓ LIMPIA! PERO SIGUE APAGADA... METELE LAS NUECES DORADAS, UNA POR UNA';
+  tray.hidden = false;
+  tray.innerHTML = '';
+  for (let i = 0; i < CONFIG.fichas; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Meter una nuez dorada');
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (b.classList.contains('in')) return;
+      audio();
+      b.classList.add('in');
+      fichas++;
+      [392, 523, 659, 784].slice(0, fichas + 1).forEach((f, k) => beep(f * (1 + fichas * .12), .1, 'square', .08, k * .08));
+      setTimeout(() => {
+        renderFichas();
+        $('hint').hidden = true;
+        if (fichas === 1) { machine.classList.add('lit1'); story.textContent = '¡SE PRENDIERON LAS LUCES! FALTAN 2 NUECES'; }
+        else if (fichas === 2) { machine.classList.add('lit2'); story.textContent = '¡LOS RODILLOS DESPERTARON! FALTA 1 NUEZ'; }
+        else encender();
+      }, 450);
+    });
+    tray.appendChild(b);
+  }
+}
+function encender() {
+  $('grime').innerHTML = '';
+  $('story').hidden = $('tray').hidden = true;
+  machine.classList.remove('off', 'lit1', 'lit2');
   fichas = CONFIG.fichas;
   renderFichas();
-  statusEl.textContent = 'CADA NUEZ DORADA ES UN TIRO. ¡TIRÁ DE LA PALANCA!';
+  $('hint').hidden = false;
+  foco('blink');
+  if (!reduced) { $('flash').classList.remove('go'); $('flash').getBoundingClientRect(); $('flash').classList.add('go'); }
+  [523, 659, 784, 1047, 1319].forEach((f, k) => beep(f, .14, 'square', .08, k * .1));
+  statusEl.textContent = '¡LA NUEZ DE LA FORTUNA DESPERTÓ! CADA NUEZ ES UN TIRO. ¡TIRÁ DE LA PALANCA!';
   lever.disabled = false;
+  lista = true;
+}
+function foco(cls) {
+  const f = $('foco');
+  f.classList.remove('blink');
+  f.getBoundingClientRect();
+  f.classList.add(cls);
 }
 
 lever.disabled = true;
@@ -1154,8 +1512,10 @@ async function tell() {
   $('start').classList.add('on');
 }
 
-// Atajos para probar: agregar #palanca (solo la máquina) o #bosque (solo las escondidas) al final del link
-if (location.hash === '#palanca') startSlot();
+// Atajos para probar, agregando al final del link: #bosque, #bellotas, #maquina (abandonada) o #palanca (ya encendida)
+if (location.hash === '#palanca') { go('game'); encender(); }
+else if (location.hash === '#maquina') startSlot();
+else if (location.hash === '#bellotas') { ganarDorada(); ganarDorada(); playCups(); }
 else if (location.hash === '#bosque') { ganarDorada(); playHidden(); }
 else tell();
 
@@ -1164,7 +1524,7 @@ else tell();
 // suspenso = el rodillo se va frenando, parece que la nuez se pasa de largo y a último momento vuelve y entra
 function spinReel(i, duration, final, suspenso) {
   const reel = reels[i];
-  const length = 40 + i * 18;
+  const length = 56 + i * 24;
   // La tira baja: el final queda arriba de todo y lo que se ve ahora queda al fondo.
   // Con suspenso va un símbolo extra arriba, que es el que asoma cuando la nuez se pasa.
   const symbols = suspenso ? [rand(CONFIG.simbolos), ...final] : [...final];
@@ -1187,15 +1547,15 @@ function spinReel(i, duration, final, suspenso) {
     showing[i] = final;
     fill(reel, final).style.cssText = '';
     reel.classList.add('stopped');
-    final[1] === T ? tin(i) : tok();
+    if (final[1] === T) { tin(i); foco('blink'); } else tok();
   };
   if (!suspenso) {
-    move(duration, 'cubic-bezier(.2,.75,.25,1)', justo);
+    move(duration, 'cubic-bezier(.12,.55,.2,1)', justo);
     return wait(duration).then(land);
   }
   return (async () => {
     // 1. frena de a poco y la nuez ya queda medio lugar pasada de la línea
-    move(duration, 'cubic-bezier(.12,.7,.15,1)', justo + cell * .5);
+    move(duration, 'cubic-bezier(.1,.5,.15,1)', justo + cell * .5);
     let gap = 110, lento = true;
     setTimeout(function tick() {
       if (!lento) return;
@@ -1230,7 +1590,7 @@ function outcome(restantes) {
 
 let busy = false;
 async function pull() {
-  if (busy || fichas === 0) return;
+  if (busy || !lista || fichas === 0) return;
   busy = true;
   lever.disabled = true;
   audio();
@@ -1246,7 +1606,7 @@ async function pull() {
   machine.classList.add('spinning');
 
   const ticker = setInterval(() => beep(330 + Math.random() * 60, .03, 'square', .025), 95);
-  const base = reduced ? 500 : 2800, paso = reduced ? 300 : 1200;
+  const base = reduced ? 500 : 4200, paso = reduced ? 300 : 1800;
   const finals = outcome(fichas);
   await Promise.all(reels.map((_, i) => {
     const suspenso = ultima && i === reels.length - 1 && !reduced;
@@ -1276,10 +1636,11 @@ async function celebrate() {
   statusEl.textContent = '¡¡¡NUEZ, NUEZ, NUEZ!!!';
   $('hint').textContent = '';
   machine.classList.add('winning');
+  $('foco').classList.add('sirena');
   fanfare();
   if (!reduced) {
     $('game').classList.add('quake');
-    $('flash').classList.add('go');
+    $('flash').classList.remove('go'); $('flash').getBoundingClientRect(); $('flash').classList.add('go');
     confetti(5000);
   }
   await wait(reduced ? 2200 : 1200);
