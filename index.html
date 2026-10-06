@@ -648,6 +648,10 @@ const CONFIG = {
     'AHORA TIENE QUE RECUPERARLAS PARA ACTIVAR EL PORTAL.',
   ],
   nuecesComunes: 5,               // cuántas hay que atajar antes de que caiga la dorada
+  // Última tirada: carteles del suspenso
+  ultimaTirada: '¡ÚLTIMA NUEZ! VAMOS, ESTA VEZ NO PODÉS FALLAR...',
+  faltaUna: 'DOS NUECES... FALTA UNA...',
+  sePasa: '¡NO, NO, NO! ¡SE PASA!',
   perdiste: [                     // mensaje después de cada tiro fallido
     'CASI... SEGUÍ INTENTANDO, ¡PODÉS LLEGAR A GANAR!',
     '¡UFF, DOS NUECES Y LA TERCERA SE PASÓ! ÚLTIMA NUEZ DORADA...',
@@ -1110,29 +1114,63 @@ else tell();
 
 // ---------- Giro ----------
 // final = [arriba, centro, abajo]; el centro es la línea de pago
-function spinReel(i, duration, final) {
+// suspenso = el rodillo se va frenando, parece que la nuez se pasa de largo y a último momento vuelve y entra
+function spinReel(i, duration, final, suspenso) {
   const reel = reels[i];
-  const length = 22 + i * 10;
+  const length = 40 + i * 18;
   // La tira baja: el final queda arriba de todo y lo que se ve ahora queda al fondo.
-  const symbols = [...final];
+  // Con suspenso va un símbolo extra arriba, que es el que asoma cuando la nuez se pasa.
+  const symbols = suspenso ? [rand(CONFIG.simbolos), ...final] : [...final];
   for (let k = 0; k < length; k++) symbols.push(rand(CONFIG.simbolos));
   symbols.push(...showing[i]);
   const strip = fill(reel, symbols);
   const cell = reel.clientHeight / 3;
+  const justo = suspenso ? -cell : 0;      // posición en la que el final queda alineado
+  const move = (ms, curve, y) => {
+    strip.style.transition = `transform ${ms}ms ${curve}`;
+    strip.style.transform = `translateY(${y}px)`;
+  };
 
   reel.classList.remove('stopped');
   strip.style.transition = 'none';
   strip.style.transform = `translateY(${-(symbols.length - 3) * cell}px)`;
   strip.getBoundingClientRect();
-  strip.style.transition = `transform ${duration}ms cubic-bezier(.2,.75,.25,1)`;
-  strip.style.transform = 'translateY(0)';
 
-  return wait(duration).then(() => {
+  const land = () => {
     showing[i] = final;
     fill(reel, final).style.cssText = '';
     reel.classList.add('stopped');
     final[1] === T ? tin(i) : tok();
-  });
+  };
+  if (!suspenso) {
+    move(duration, 'cubic-bezier(.2,.75,.25,1)', justo);
+    return wait(duration).then(land);
+  }
+  return (async () => {
+    // 1. frena de a poco y la nuez ya queda medio lugar pasada de la línea
+    move(duration, 'cubic-bezier(.12,.7,.15,1)', justo + cell * .5);
+    let gap = 110, lento = true;
+    setTimeout(function tick() {
+      if (!lento) return;
+      beep(330, .03, 'square', .03);
+      gap *= 1.1;
+      setTimeout(tick, gap);
+    }, duration * .6);
+    await wait(duration);
+    lento = false;
+    // 2. se sigue arrastrando: parece que se pasa del todo
+    statusEl.textContent = CONFIG.sePasa;
+    statusEl.classList.add('oops');
+    move(1500, 'linear', justo + cell * .85);
+    [0, 480, 960, 1440].forEach(t => setTimeout(() => { beep(70, .14, 'sine', .3); beep(55, .1, 'sine', .25, .16); }, t));
+    await wait(1500 + 500);
+    // 3. ...y a último momento vuelve y entra
+    statusEl.classList.remove('oops');
+    [400, 600, 900, 1300].forEach((f, k) => beep(f, .06, 'square', .06, k * .05));
+    move(330, 'cubic-bezier(.3,1.7,.5,1)', justo);
+    await wait(350);
+    land();
+  })();
 }
 
 // Qué sale en cada tiro: los fallidos se quedan cada vez más cerca, el último gana.
@@ -1156,13 +1194,19 @@ async function pull() {
   beep(140, .15, 'sawtooth', .08);
   setTimeout(() => lever.classList.remove('pulled'), 380);
   statusEl.classList.remove('oops');
-  statusEl.textContent = '. . .';
+  const ultima = fichas === 0;
+  statusEl.textContent = ultima ? CONFIG.ultimaTirada : '. . .';
   machine.classList.add('spinning');
 
   const ticker = setInterval(() => beep(330 + Math.random() * 60, .03, 'square', .025), 95);
-  const base = reduced ? 500 : 1900;
+  const base = reduced ? 500 : 2800, paso = reduced ? 300 : 1200;
   const finals = outcome(fichas);
-  await Promise.all(reels.map((_, i) => spinReel(i, base + i * (reduced ? 300 : 900), finals[i])));
+  await Promise.all(reels.map((_, i) => {
+    const suspenso = ultima && i === reels.length - 1 && !reduced;
+    return spinReel(i, base + i * paso + (suspenso ? 1600 : 0), finals[i], suspenso).then(() => {
+      if (ultima && i === reels.length - 2) { clearInterval(ticker); statusEl.textContent = CONFIG.faltaUna; }
+    });
+  }));
   clearInterval(ticker);
   machine.classList.remove('spinning');
 
