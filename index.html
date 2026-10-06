@@ -576,6 +576,16 @@ h1, h2, p { margin: 0; }
   .video { max-width: 100%; }
 }
 
+#cobrar { font-size: clamp(14px, 4.4vw, 22px); padding: 20px 26px; animation: hop .6s steps(2) infinite; }
+#debug {
+  position: fixed; left: 0; bottom: 0; z-index: 9;
+  margin: 0; padding: 6px 8px;
+  background: #000; color: #0f0;
+  font: 12px/1.4 monospace;
+  white-space: pre-wrap;
+  pointer-events: none;
+}
+
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -634,6 +644,7 @@ h1, h2, p { margin: 0; }
   <div class="headline">
     <div class="pre" id="pre">
       <p class="jackpot" id="jackpot">¡JACKPOT!</p>
+      <button class="btn" id="cobrar" type="button" hidden>COBRAR EL PREMIO</button>
       <p class="tease cue" id="tease1"></p>
       <p class="tease cue" id="tease2"></p>
     </div>
@@ -650,6 +661,7 @@ h1, h2, p { margin: 0; }
 
 <div id="flash" aria-hidden="true"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
+<pre id="debug" hidden></pre>
 
 <script>
 // ====== Lo único que hay que tocar para personalizar el regalo ======
@@ -673,6 +685,7 @@ const CONFIG = {
     '¡UFF, DOS NUECES Y LA TERCERA SE PASÓ! ÚLTIMA NUEZ DORADA...',
   ],
 
+  pedirToque: true,               // true = botón "COBRAR EL PREMIO" antes de la música (así ningún navegador bloquea el sonido)
   videoId: 'eBG7P-K-r1Y',         // ID de YouTube (Everlong). Es lo que va después de "v=" en la URL
   // Antesala: solo música, JACKPOT temblando y estos dos carteles
   intriga1En: 2,
@@ -1289,7 +1302,7 @@ async function celebrate() {
   startShow();
 }
 
-let player, started = false;
+let player, started = false, showAt = 0, lastT = -1, lastMove = 0, reloj = false, relojBase = 0, ended = false;
 function startShow() {
   $('lead').textContent = CONFIG.lead;
   $('band').textContent = CONFIG.band;
@@ -1301,10 +1314,20 @@ function startShow() {
   stage.classList.add('on');
   if (!reduced) $('jackpot').classList.add('quake');
 
+  if (CONFIG.pedirToque) {
+    // Los navegadores solo dejan arrancar video con sonido justo después de un toque:
+    // por eso la música empieza con este botón y no sola.
+    $('cobrar').hidden = false;
+    $('cobrar').addEventListener('click', () => { $('cobrar').hidden = true; playShow(); }, { once: true });
+  } else {
+    playShow();
+  }
+}
+function playShow() {
+  beep(1319, .1, 'square', .08); beep(1976, .25, 'square', .08, .1);
   try { player.unMute(); player.setVolume(100); player.playVideo(); } catch (e) {}
+  showAt = lastMove = performance.now();
   setInterval(tick, 200);
-  // Si el navegador no deja arrancar solo (pasa en algunos celulares), que lo toque ella.
-  setTimeout(() => { if (!started) { $('video').classList.add('on', 'tap'); $('help').hidden = false; } }, 4000);
 }
 
 const cues = [
@@ -1329,18 +1352,35 @@ function show(id, big) {
   }
 }
 function tick() {
-  if (!player || !player.getPlayerState) return;
-  const state = player.getPlayerState();
-  if (state === 1 && !started) {
-    started = true;
-    try { player.unloadModule('captions'); } catch (e) {}   // sin subtítulos automáticos
-    $('video').classList.remove('tap');
-    $('help').hidden = true;
+  const now = performance.now();
+  let t = 0, state = 'sin reproductor';
+  if (player && player.getPlayerState) {
+    state = player.getPlayerState();
+    t = player.getCurrentTime() || 0;
+    if (state === 1) {
+      if (!started) { started = true; try { player.unloadModule('captions'); } catch (e) {} }   // sin subtítulos automáticos
+      $('video').classList.remove('tap');
+      $('help').hidden = true;
+    }
+    if (state === 0) { ended = true; $('video').classList.remove('on'); }   // al terminar, fuera las sugerencias de YouTube
+    if (t !== lastT) { lastT = t; lastMove = now; }
   }
-  if (state === 0) $('video').classList.remove('on');   // al terminar, fuera las sugerencias de YouTube
-  const t = player.getCurrentTime();
+  // Si el video no arranca o se queda trabado 4 segundos, el premio no se cuelga:
+  // los carteles siguen con reloj propio y el video queda a la vista para tocarlo.
+  if (!reloj && !ended && now - lastMove > 4000) {
+    reloj = true;
+    relojBase = now - t * 1000;
+    $('video').classList.add('on', 'tap');
+    $('help').hidden = false;
+    try { player.playVideo(); } catch (e) {}
+  }
+  if (reloj && state !== 1) t = Math.max(t, (now - relojBase) / 1000);
+  if (DEBUG) $('debug').textContent = `estado ${state}  t ${t.toFixed(1)}  arrancó ${started}  reloj ${reloj}\n${navigator.userAgent}`;
   while (cues.length && t >= CONFIG[cues[0][0]]) cues.shift()[1]();
 }
+// Diagnóstico: agregar ?debug al link muestra abajo qué está haciendo el reproductor
+const DEBUG = location.search.includes('debug');
+$('debug').hidden = !DEBUG;
 
 // El reproductor se carga escondido desde el principio para que la música arranque al instante.
 window.onYouTubeIframeAPIReady = () => {
