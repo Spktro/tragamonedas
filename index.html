@@ -1373,7 +1373,7 @@ function playCups() {
   const bg = paintForest(96, 70, 46, false);
   bg.className = 'bg';
   scene.appendChild(bg);
-  scene.insertAdjacentHTML('beforeend', `<img class="sprite peek" alt="" style="right:3%;top:5%;width:20%" src="${pix(CONFIG.escenas[2].icono)}">`);
+  scene.insertAdjacentHTML('beforeend', `<img class="sprite peek" alt="" style="left:4%;top:4%;width:20%" src="${pix(CONFIG.escenas[2].icono)}">`);
   scene.insertAdjacentHTML('beforeend',
     `<img class="sprite cupnut" alt="" src="${SPR.gold.url}"><img class="sprite shadow-sq" id="sq" alt="" src="${silueta(SPR.squirrel)}">`);
   const nut = scene.querySelector('.cupnut'), sq = $('sq');
