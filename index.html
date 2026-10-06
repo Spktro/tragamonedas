@@ -907,7 +907,7 @@ let fichas = 0;
 for (let i = 0; i < CONFIG.fichas; i++) $('coins').insertAdjacentHTML('beforeend', '<i class="coin"></i>');
 function renderFichas() {
   [...document.querySelectorAll('.coin')].forEach((c, i) => c.classList.toggle('spent', i >= fichas));
-  $('hint').textContent = fichas === 1 ? 'Te queda 1 nuez dorada.' : `Te quedan ${fichas} nueces doradas.`;
+  $('hint').textContent = fichas === 0 ? 'Era tu última nuez dorada...' : fichas === 1 ? 'Te queda 1 nuez dorada.' : `Te quedan ${fichas} nueces doradas.`;
 }
 
 // ---------- Sonido (sintetizado, sin archivos) ----------
