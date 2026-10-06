@@ -1199,10 +1199,13 @@ function playCatch() {
           ganarDorada();
           msg(`¡FELICIDADES! RECUPERASTE UNA NUEZ DORADA. AHORA SOLO FALTAN ${CONFIG.fichas - doradas}`);
           setTimeout(playHidden, 2600);
-        } else if (G1.got < need) {
-          G1.got++;
+        } else {
+          // las que sobran mientras llega la dorada también suenan, aunque ya no cuenten
+          if (G1.got < need) {
+            G1.got++;
+            msg(G1.got < need ? `NUECES: ${G1.got} DE ${need}` : '¡AHORA ATAJÁ LA DORADA!');
+          }
           beep(660 + G1.got * 60, .09, 'square', .08);
-          msg(G1.got < need ? `NUECES: ${G1.got} DE ${need}` : '¡AHORA ATAJÁ LA DORADA!');
         }
       } else if (n.y > H) {
         n.dead = true;
