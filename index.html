@@ -373,6 +373,7 @@ h1, h2, p { margin: 0; }
 }
 .coins .coin.spent { opacity: .2; filter: grayscale(1); }
 .cell .sym { height: 64%; image-rendering: pixelated; }
+.inline-nut { height: 1.9em; vertical-align: middle; margin-left: .2em; }
 
 /* ---------- Palanca ---------- */
 .lever {
@@ -494,7 +495,7 @@ h1, h2, p { margin: 0; }
 }
 .win .band {
   font-family: var(--display);
-  font-size: clamp(30px, 10vw, 96px);
+  font-size: clamp(28px, min(7.4vw, 13vh), 96px);
   line-height: 1.25;
   color: #fff;
   text-shadow: 4px 4px 0 var(--cabinet), 8px 8px 0 var(--ink);
@@ -527,7 +528,7 @@ h1, h2, p { margin: 0; }
 .video {
   position: relative;
   width: 100%;
-  max-width: min(760px, 78vh);
+  max-width: min(760px, 72vh);
   aspect-ratio: 16 / 9;
   background: #000;
   border: var(--px) solid var(--ink);
@@ -552,6 +553,12 @@ h1, h2, p { margin: 0; }
 }
 .help { color: var(--gold); }
 .help a { color: var(--muted); }
+
+/* Celular vertical: sobra alto, así que la banda va en dos renglones bien grandes */
+@media (orientation: portrait) {
+  .win .band { font-size: clamp(28px, 11vw, 96px); }
+  .video { max-width: 100%; }
+}
 
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 
@@ -638,7 +645,7 @@ const CONFIG = {
     '...UNA ARDILLITA',
     'QUE TENÍA TRES HERMOSAS NUECES DORADAS.',
     'PERO UN DÍA SE LE PERDIERON EN EL BOSQUE...',
-    'AHORA TIENE QUE RECUPERARLAS PARA ENCENDER LA MÁQUINA DE LA SUERTE.',
+    'AHORA TIENE QUE RECUPERARLAS PARA ACTIVAR EL PORTAL.',
   ],
   nuecesComunes: 5,               // cuántas hay que atajar antes de que caiga la dorada
   perdiste: [                     // mensaje después de cada tiro fallido
@@ -649,7 +656,7 @@ const CONFIG = {
   videoId: 'eBG7P-K-r1Y',         // ID de YouTube (Everlong). Es lo que va después de "v=" en la URL
   // Antesala: solo música, JACKPOT temblando y estos dos carteles
   intriga1En: 2,
-  intriga1: 'TRES NUECES 🌰🌰🌰',
+  intriga1: 'TRES NUECES DORADAS',     // al lado se dibujan las tres nueces
   intriga2En: 4.5,
   intriga2: 'PERO UNA ARDILLA COMO VOS MERECE ALGO MEJOR...',
   videoAparece: 5,                // segundo del video en que deja de ser solo música y aparece la imagen
@@ -1042,7 +1049,7 @@ function playHidden() {
           if (doradas >= CONFIG.fichas) {
             busy2 = true;
             if (!reduced) confetti(2500);
-            msg(`¡FELICIDADES! RECUPERASTE LAS ${CONFIG.fichas} NUECES DORADAS. A LA MÁQUINA...`);
+            msg(`¡FELICIDADES! RECUPERASTE LAS ${CONFIG.fichas} NUECES DORADAS. ¡EL PORTAL SE ACTIVÓ!`);
             setTimeout(startSlot, 3000);
           } else {
             msg(`¡FELICIDADES! ENCONTRASTE UNA. AHORA SOLO FALTA${CONFIG.fichas - doradas > 1 ? 'N' : ''} ${CONFIG.fichas - doradas}`);
@@ -1195,7 +1202,7 @@ function startShow() {
   $('band').textContent = CONFIG.band;
   $('ticket').innerHTML = [CONFIG.fecha, CONFIG.lugar].filter(Boolean).map(t => `<span>${t}</span>`).join('');
   $('note').textContent = CONFIG.nota;
-  $('tease1').textContent = CONFIG.intriga1;
+  $('tease1').innerHTML = CONFIG.intriga1 + ' ' + `<img class="sprite inline-nut" alt="" src="${SPR.gold.url}">`.repeat(3);
   $('tease2').textContent = CONFIG.intriga2;
   $('ytlink').href = `https://www.youtube.com/watch?v=${CONFIG.videoId}`;
   stage.classList.add('on');
