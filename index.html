@@ -429,6 +429,22 @@ h1, h2, p { margin: 0; }
   80% { transform: translate(7px, 5px) rotate(-.5deg); }
   100% { transform: translate(0, 0) rotate(0); }
 }
+/* La ardilla festeja saltando del centro a los bordes */
+.dancer {
+  position: fixed; left: 50%;
+  z-index: 6;
+  width: 96px; height: 96px;
+  margin-left: -48px;
+  pointer-events: none;
+  animation: dance-x 3.4s linear both;
+}
+.dancer i { display: block; animation: dance-flip 3.4s steps(1) both; }
+.dancer img { display: block; width: 100%; animation: dance-hop .3s cubic-bezier(.2,.6,.4,1) infinite alternate; }
+@keyframes dance-x { 0% { transform: translateX(0); } 25% { transform: translateX(-36vw); } 75% { transform: translateX(36vw); } 100% { transform: translateX(0); } }
+@keyframes dance-flip { 0% { transform: scaleX(-1); } 25% { transform: scaleX(1); } 75% { transform: scaleX(-1); } 100% { transform: scaleX(1); } }
+@keyframes dance-hop { from { transform: translateY(0); } to { transform: translateY(-46px); } }
+.game.bye { opacity: 0; transition: opacity .7s; }
+
 #flash {
   position: fixed; inset: 0;
   background: #fff;
@@ -851,6 +867,24 @@ function paintForest(W, H, ground, big) {
   }
   return c;
 }
+SPR.feliz = sprite([
+  '..kkkk..........',
+  '.kTTTTk....k.k..',
+  'kTTttTTk..kokok.',
+  'kTttttTk.kookook',
+  'kTttttTk.kokokok',
+  'kTtttTk..koooPok',
+  '.kTttTk.koooowk.',
+  '.kTttTkkooowwk..',
+  '..kTttkooowwwk..',
+  '..kTtkoooowwwk..',
+  '..kttkooookwwk..',
+  '...kkoooowwwk...',
+  '....kooooowwk...',
+  '....kookkkook...',
+  '...kkook..kookk.',
+  '...kkkk...kkkk..',
+], { T: '#e89a55', t: '#c96a2b', o: '#b5722d', w: '#f6ecd2', P: '#ff8fa3' });
 document.documentElement.style.setProperty('--nut-gold', `url(${SPR.gold.url})`);
 document.querySelectorAll('.gnut, .tnut').forEach(i => { i.src = SPR.gold.url; });
 $('hero').src = SPR.squirrel.url;
@@ -1235,8 +1269,23 @@ async function celebrate() {
     $('flash').classList.add('go');
     confetti(5000);
   }
-  await wait(2200);
+  await wait(reduced ? 2200 : 1200);
   $('game').classList.remove('quake');
+  if (!reduced) {
+    // la ardilla aparece arriba de la máquina, feliz, y salta de lado a lado
+    const d = document.createElement('div');
+    d.className = 'dancer';
+    d.style.top = Math.max(4, machine.getBoundingClientRect().top - 84) + 'px';
+    d.innerHTML = `<i><img class="sprite" alt="" src="${SPR.feliz.url}"></i>`;
+    document.body.appendChild(d);
+    let salto = 0;
+    const saltitos = setInterval(() => beep(salto++ % 2 ? 1047 : 880, .05, 'square', .05), 300);
+    await wait(3400);
+    $('game').classList.add('bye');
+    await wait(900);
+    clearInterval(saltitos);
+    d.remove();
+  }
   startShow();
 }
 
